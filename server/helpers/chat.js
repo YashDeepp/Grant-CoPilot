@@ -21,8 +21,7 @@ export default {
                         },{
                             role: "assistant",
                             content: openai
-                        }],
-                        
+                        }]
                     }]
                 })
             } catch (err) {
@@ -97,10 +96,6 @@ export default {
                 }, {
                     $unwind: '$data'
                 }, {
-                    $match: {
-                        'data.chatId': chatId
-                    }
-                }, {
                     $project: {
                         _id: 0,
                         chat: '$data.chats'
@@ -117,21 +112,28 @@ export default {
             }
         })
     },
-    getHistory: (userId) => {
+    getHistory: (userId, ) => {
         return new Promise(async (resolve, reject) => {
             let res = await db.collection(collections.CHAT).aggregate([
                 {
                     $match: {
                         user: userId.toString()
                     }
-                }, 
-                {
+                }, {
                     $unwind: '$data'
-                }, 
-                {
+                }, {
                     $project: {
                         _id: 0,
-                        chats: '$data.chats' // Project the entire 'chats' array
+                        chatId: '$data.chatId',
+                        prompt: {
+                            $arrayElemAt: ['$data.chats.prompt', 0]
+                        }
+                    }
+                }, {
+                    $limit: 10
+                }, {
+                    $sort: {
+                        chatId: -1
                     }
                 }
             ]).toArray().catch((err) => {

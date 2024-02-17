@@ -117,7 +117,8 @@ router.put('/', CheckUser, async (req, res) => {
         "role":"assistant", 
         "content":prompt
      }]
-    let message = await chat.getHistory(userId)
+    let message = await chat.getChat(userId)
+
     message=message[0].chats
     message.push(...mes)
     console.log(message)
