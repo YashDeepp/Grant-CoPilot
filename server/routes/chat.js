@@ -4,7 +4,8 @@ import user from '../helpers/user.js'
 import jwt from 'jsonwebtoken'
 import chat from "../helpers/chat.js";
 import OpenAI from "openai";
-
+import { db } from "../db/connection.js";
+import collections from "../db/collections.js";
 
 dotnet.config()
 
@@ -65,8 +66,9 @@ router.post('/', CheckUser, async (req, res) => {
     
     let response = {}
     try {
+        console.log("POST is being called")
         response.openai = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4-1106-preview",
             messages:[{
                 "role":"assistant", 
                 "content":prompt
@@ -111,19 +113,20 @@ router.post('/', CheckUser, async (req, res) => {
 
 router.put('/', CheckUser, async (req, res) => {
     const { prompt, userId, chatId } = req.body
-    const messages= [{
+    const mes= [{
         "role":"assistant", 
         "content":prompt
      }]
-    
+    let message = await chat.getHistory(userId)
+    message=message[0].chats
+    message.push(...mes)
+    console.log(message)
     let response = {}
-    try {
+    try { 
+        console.log("PUT is called")
         response.openai = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages:[{
-                "role":"assistant", 
-                "content":prompt
-             }],
+            model: "gpt-4-1106-preview",
+            messages:message
         });
        // console.log(response.openai.choices[0].message)
         if (response.openai.choices[0].message) {

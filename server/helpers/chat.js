@@ -4,6 +4,8 @@ import { ObjectId } from "mongodb";
 
 export default {
     newResponse: (prompt, { openai }, userId) => {
+        //console.log(prompt)
+        //console.log(openai)
         return new Promise(async (resolve, reject) => {
             let chatId = new ObjectId().toHexString()
             let res = null
@@ -14,9 +16,13 @@ export default {
                     data: [{
                         chatId,
                         chats: [{
-                            prompt,
+                            role:"user",
+                            content: prompt,
+                        },{
+                            role: "assistant",
                             content: openai
-                        }]
+                        }],
+                        
                     }]
                 })
             } catch (err) {
@@ -28,7 +34,10 @@ export default {
                             data: {
                                 chatId,
                                 chats: [{
+                                    role:"user",
                                     prompt,
+                                },{
+                                    role: "assistant",
                                     content: openai
                                 }]
                             }
@@ -56,9 +65,15 @@ export default {
                 'data.chatId': chatId
             }, {
                 $push: {
-                    'data.$.chats': {
-                        prompt,
-                        content: openai
+                    data: {
+                        chatId,
+                        chats: [{
+                            role:"user",
+                            prompt,
+                        },{
+                            role: "assistant",
+                            content: openai
+                        }]
                     }
                 }
             }).catch((err) => {
@@ -109,21 +124,14 @@ export default {
                     $match: {
                         user: userId.toString()
                     }
-                }, {
+                }, 
+                {
                     $unwind: '$data'
-                }, {
+                }, 
+                {
                     $project: {
                         _id: 0,
-                        chatId: '$data.chatId',
-                        prompt: {
-                            $arrayElemAt: ['$data.chats.prompt', 0]
-                        }
-                    }
-                }, {
-                    $limit: 10
-                }, {
-                    $sort: {
-                        chatId: -1
+                        chats: '$data.chats' // Project the entire 'chats' array
                     }
                 }
             ]).toArray().catch((err) => {
