@@ -69,8 +69,10 @@ const Chat = forwardRef(({ error }, ref) => {
     <div className='Chat' ref={ref}>
       {
         all?.filter((obj) => {
+          console.log(all)
           return !obj.id ? true : obj?.id !== latest?.id
         })?.map((obj, key) => {
+          console.log(obj)
           return (
             <Fragment key={key}>
               <div className='qs'>

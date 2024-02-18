@@ -338,6 +338,44 @@
                 }
             }
 
+            .otp {
+                margin-top: .8rem;
+                position: relative;
+
+                input {
+                    width: calc((18rem + 16px) - 4rem);
+                    padding-left: 16px;
+                    padding-right: 4rem;
+
+                    @media screen and (max-width:340px) {
+                        width: calc((100%) - (4rem + 16px));
+                    }
+                }
+
+                button {
+                    top: 0;
+                    position: absolute;
+                    right: 0;
+                    height: 100%;
+                    border: none;
+                    padding: 0 10px;
+                    background: transparent;
+                    transition: all .2s ease-in-out;
+                    -moz-transition: all .2s ease-in-out;
+
+                    svg {
+                        fill: #6f7780;
+                        height: 1.2rem;
+                        width: 1.2rem;
+                    }
+
+                    &:hover {
+                        cursor: pointer;
+                        background: rgba(0, 0, 0, .1);
+                    }
+                }
+            }
+
             #alertBox {
                 display: none;
                 margin-top: .5rem;

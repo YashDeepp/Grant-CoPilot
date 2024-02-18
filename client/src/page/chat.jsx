@@ -6,7 +6,7 @@ import { setLoading } from "../redux/loading";
 import { useDispatch, useSelector } from "react-redux";
 import { addList, emptyAllRes, insertNew, livePrompt } from "../redux/messages";
 import { emptyUser } from "../redux/user";
-import instance from "../config/instance";
+import instance from "../config/instance";  
 import "./style.scss";
 
 const reducer = (state, { type, status }) => {
@@ -127,7 +127,6 @@ const InputArea = ({ status, chatRef, stateAction }) => {
     });
   });
 
-
   const FormHandle = async () => {
     if (prompt?.length > 0) {
       stateAction({ type: "chat", status: true });
@@ -141,6 +140,7 @@ const InputArea = ({ status, chatRef, stateAction }) => {
 
       try {
         if (_id) {
+          console.log(prompt, content, _id)
           res = await instance.put("/api/chat", {
             chatId: _id,
             prompt,
@@ -168,42 +168,29 @@ const InputArea = ({ status, chatRef, stateAction }) => {
           chatRef?.current?.loadResponse(stateAction, content, chatsId);
 
           stateAction({ type: "error", status: false });
-		dispatch(livePrompt(""));
+          dispatch(livePrompt(""));
         }
       }
     }
   };
 
-
-
-
-
-
-
   useEffect(() => {
     const handleInput = (e) => {
-        if (e.key === "Enter" && e.shiftKey) {
-            e.preventDefault();
+      if (e.key === "Enter" && e.shiftKey) {
+        e.preventDefault();
 
-            FormHandle(textAreaRef.current.value.trim());
+        FormHandle(textAreaRef.current.value.trim());
 
-            textAreaRef.current.value = "";
-        }
+        textAreaRef.current.value = "";
+      }
     };
 
     textAreaRef.current?.addEventListener("keydown", handleInput);
 
     return () => {
-        textAreaRef.current?.removeEventListener("keydown", handleInput);
+      textAreaRef.current?.removeEventListener("keydown", handleInput);
     };
-}, [FormHandle]);
-
-
-
-
-
-
-
+  }, [FormHandle]);
 
   return (
     <div className="inputArea">
