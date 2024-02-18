@@ -119,21 +119,22 @@ router.post('/', CheckUser, async (req, res) => {
 
 router.put('/', CheckUser, async (req, res) => {
     const { prompt, userId, chatId } = req.body
-    let mes= [{
+    console.log(prompt,userId,chatId)
+    let mes= {
         "role": "system",
         "content": "You are a very interactive and helpful assistant ",
-     }]
+     }
     let full="";
     let message = await chat.Messages(userId,chatId)
     message=message[0].chats
-    mes.push(...message)
-    mes.push(...[{
+    mes = [mes, ...message]
+    mes = [...mes, {
         role:"user",
         content: prompt
-    }])
-    console.log(mes)
+    }]
     let response = {}
     try { 
+        console.log("first")
         console.log("PUT is called")
         response.openai = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
@@ -144,7 +145,7 @@ router.put('/', CheckUser, async (req, res) => {
         for await (const part of response.openai){
             let text = part.choices[0].delta.content ?? ""
             full+=text
-            console.clear();
+            // console.clear();
             console.log(full);
         }
         response.openai={
@@ -167,6 +168,7 @@ router.put('/', CheckUser, async (req, res) => {
                 }
                 index++
             }
+            console.log(index)
             response.db = await chat.Response(prompt, response, userId, chatId)
         }
     } catch (err) {
@@ -176,11 +178,13 @@ router.put('/', CheckUser, async (req, res) => {
         })
     } finally {
         if (response?.db && response?.openai) {
+            console.log(response)
             res.status(200).json({
                 status: 200,
                 message: 'Success',
                 data: {
-                    content: response.openai
+                    content: response.openai,
+                    chatId: response.db.chatId
                 }
             })
         }
@@ -232,6 +236,7 @@ router.get('/history', CheckUser, async (req, res) => {
         })
     } finally {
         if (response) {
+            console.log(response)
             res.status(200).json({
                 status: 200,
                 message: "Success",

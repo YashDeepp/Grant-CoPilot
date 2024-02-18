@@ -20,7 +20,13 @@ export default {
                         },{
                             role: "assistant",
                             content: openai
-                        }]
+                        }],
+                        chat:[
+                            {
+                                prompt: prompt,
+                                content: openai
+                            }
+                        ]
                     }]
                 })
             } catch (err) {
@@ -37,7 +43,14 @@ export default {
                                 },{
                                     role: "assistant",
                                     content: openai
-                                }]
+                                }],
+                                chat:[
+                                    {
+                                        prompt: prompt,
+                                        content:openai
+                                    }
+                                ]
+
                             }
                         }
                     }).catch((err) => {
@@ -71,7 +84,12 @@ export default {
                                     { role: "user", content: prompt },
                                     { role: "assistant", content: openai }
                                 ]
+
                             },
+                            "data.$.chat":{
+                                prompt:prompt,
+                                content:openai
+                            }
                         }
                     });
                 } catch (err) {
@@ -132,7 +150,7 @@ export default {
                 }, {
                     $project: {
                         _id: 0,
-                        chat: '$data.chats'
+                        chat: '$data.chat'
                     }
                 }
             ]).toArray().catch((err) => [
@@ -160,7 +178,8 @@ export default {
                 {
                     $project: {
                         _id: 0,
-                        chats: '$data.chats' // Project the entire 'chats' array
+                        chatId:'$data.chatId',
+                        chat: '$data.chat' // Project the entire 'chats' array
                     }
                 }
             ]).toArray().catch((err) => {
