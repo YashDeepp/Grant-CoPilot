@@ -4,11 +4,10 @@ import { ObjectId } from "mongodb";
 
 export default {
     newResponse: (prompt, { openai }, userId) => {
-        //console.log(prompt)
-        //console.log(openai)
         return new Promise(async (resolve, reject) => {
             let chatId = new ObjectId().toHexString()
             let res = null
+            console.log(prompt)
             try {
                 await db.collection(collections.CHAT).createIndex({ user: 1 }, { unique: true })
                 res = await db.collection(collections.CHAT).insertOne({
@@ -17,7 +16,7 @@ export default {
                         chatId,
                         chats: [{
                             role:"user",
-                            content: prompt,
+                            content: prompt
                         },{
                             role: "assistant",
                             content: openai
@@ -34,7 +33,7 @@ export default {
                                 chatId,
                                 chats: [{
                                     role:"user",
-                                    prompt,
+                                    content: prompt,
                                 },{
                                     role: "assistant",
                                     content: openai
@@ -57,6 +56,39 @@ export default {
             }
         })
     },
+    Response: (prompt, { openai }, userId, chatId) => {
+        return new Promise(async (resolve, reject) => {
+            let res = null;
+            try  {
+                    // If the chat exists, update it by pushing the new chat
+                    res = await db.collection(collections.CHAT).updateOne({
+                        user: userId.toString(),
+                        "data.chatId": chatId
+                    }, {
+                        $push: {
+                            "data.$.chats": {
+                                role: "user",
+                                content:prompt
+                            },
+                            "data.$.chats": {
+                                role: "assistant",
+                                content: openai
+                            }
+                        }
+                    });
+                } catch (err) {
+                reject(err);
+            } finally {
+                if (res) {
+                    res.chatId = chatId;
+                    resolve(res);
+                } else {
+                    reject({ text: "DB gets something wrong" });
+                }
+            }
+        });
+    },
+    
     updateChat: (chatId, prompt, { openai }, userId) => {
         return new Promise(async (resolve, reject) => {
             let res = await db.collection(collections.CHAT).updateOne({
@@ -68,7 +100,7 @@ export default {
                         chatId,
                         chats: [{
                             role:"user",
-                            prompt,
+                            content: prompt,
                         },{
                             role: "assistant",
                             content: openai
@@ -96,6 +128,10 @@ export default {
                 }, {
                     $unwind: '$data'
                 }, {
+                    $match: {
+                        'data.chatId': chatId
+                    }
+                }, {
                     $project: {
                         _id: 0,
                         chat: '$data.chats'
@@ -112,28 +148,21 @@ export default {
             }
         })
     },
-    getHistory: (userId, ) => {
+    getHistory: (userId ) => {
         return new Promise(async (resolve, reject) => {
             let res = await db.collection(collections.CHAT).aggregate([
                 {
                     $match: {
                         user: userId.toString()
                     }
-                }, {
+                }, 
+                {
                     $unwind: '$data'
-                }, {
+                }, 
+                {
                     $project: {
                         _id: 0,
-                        chatId: '$data.chatId',
-                        prompt: {
-                            $arrayElemAt: ['$data.chats.prompt', 0]
-                        }
-                    }
-                }, {
-                    $limit: 10
-                }, {
-                    $sort: {
-                        chatId: -1
+                        chats: '$data.chats' // Project the entire 'chats' array
                     }
                 }
             ]).toArray().catch((err) => {
@@ -160,6 +189,37 @@ export default {
             }).catch((err) => {
                 reject(err)
             })
+        })
+    },
+    Messages: (userId, chatId) => {
+        return new Promise(async (resolve, reject) => {
+            let res = await db.collection(collections.CHAT).aggregate([
+                {
+                    $match: {
+                        user: userId.toString()
+                    }
+                }, {
+                    $unwind: '$data'
+                }, {
+                    $match: {
+                        'data.chatId': chatId
+                    }
+                }, 
+                {
+                    $project: {
+                        _id: 0,
+                        chats: '$data.chats' // Project the entire 'chats' array
+                    }
+                }
+            ]).toArray().catch((err) => {
+                reject(err)
+            })
+
+            if (Array.isArray(res)) {
+                resolve(res)
+            } else {
+                reject({ text: "DB Getting Some Error" })
+            }
         })
     }
 }

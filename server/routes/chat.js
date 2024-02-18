@@ -61,18 +61,20 @@ router.post('/', CheckUser, async (req, res) => {
     const { prompt, userId } = req.body
     const messages= [{
         "role":"assistant", 
-        "content":prompt
+        "content":prompt,
+        
      }]
     
     let response = {}
     try {
         console.log("POST is being called")
         response.openai = await openai.chat.completions.create({
-            model: "gpt-4-1106-preview",
+            model: "gpt-4-turbo-preview",
             messages:[{
                 "role":"assistant", 
                 "content":prompt
              }],
+             "top_p":0.5
         });
       //  console.log(response.openai.choices[0].message)
         if (response.openai.choices[0].message) {
@@ -113,21 +115,25 @@ router.post('/', CheckUser, async (req, res) => {
 
 router.put('/', CheckUser, async (req, res) => {
     const { prompt, userId, chatId } = req.body
-    const mes= [{
-        "role":"assistant", 
-        "content":prompt
+    let mes= [{
+        "role": "system",
+        "content": "You are a very interactive and helpful assistant ",
      }]
-    let message = await chat.getChat(userId)
-
+    let message = await chat.Messages(userId,chatId)
     message=message[0].chats
-    message.push(...mes)
-    console.log(message)
+    mes.push(...message)
+    mes.push(...[{
+        role:"user",
+        content: prompt
+    }])
+    console.log(mes)
     let response = {}
     try { 
         console.log("PUT is called")
         response.openai = await openai.chat.completions.create({
-            model: "gpt-4-1106-preview",
-            messages:message
+            model: "gpt-4-turbo-preview",
+            messages:mes,
+            "top_p":0.5
         });
        // console.log(response.openai.choices[0].message)
         if (response.openai.choices[0].message) {
@@ -144,7 +150,7 @@ router.put('/', CheckUser, async (req, res) => {
                 }
                 index++
             }
-            response.db = await chat.newResponse(prompt, response, userId)
+            response.db = await chat.Response(prompt, response, userId, chatId)
         }
     } catch (err) {
         res.status(500).json({
