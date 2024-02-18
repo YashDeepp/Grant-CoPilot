@@ -74,8 +74,12 @@ router.post('/', CheckUser, async (req, res) => {
                 "role":"assistant", 
                 "content":prompt
              }],
-             "top_p":0.5
+             "top_p":0.5,
+             //: true
         });
+        // for await (const part of response.openai){
+        //     console.log(part.choices[0].delta.content)
+        // }
       //  console.log(response.openai.choices[0].message)
         if (response.openai.choices[0].message) {
             response.openai =response.openai.choices[0].message.content
@@ -119,6 +123,7 @@ router.put('/', CheckUser, async (req, res) => {
         "role": "system",
         "content": "You are a very interactive and helpful assistant ",
      }]
+    let full="";
     let message = await chat.Messages(userId,chatId)
     message=message[0].chats
     mes.push(...message)
@@ -133,11 +138,23 @@ router.put('/', CheckUser, async (req, res) => {
         response.openai = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages:mes,
-            "top_p":0.5
+            "top_p":0.5,
+            stream: true
         });
-       // console.log(response.openai.choices[0].message)
-        if (response.openai.choices[0].message) {
-            response.openai =response.openai.choices[0].message.content
+        for await (const part of response.openai){
+            let text = part.choices[0].delta.content ?? ""
+            full+=text
+            console.clear();
+            console.log(full);
+        }
+        response.openai={
+            role:"assistant",
+            content:full
+        };
+       //response.openai = response.openai.choices[0].message;
+       console.log(response.openai)
+        if (response.openai) {
+            response.openai =response.openai.content
             let index = 0
           //  console.log(response['openai'])
             for (let c of response['openai']) {

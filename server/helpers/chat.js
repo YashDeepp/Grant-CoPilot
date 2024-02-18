@@ -67,13 +67,11 @@ export default {
                     }, {
                         $push: {
                             "data.$.chats": {
-                                role: "user",
-                                content:prompt
+                                $each: [
+                                    { role: "user", content: prompt },
+                                    { role: "assistant", content: openai }
+                                ]
                             },
-                            "data.$.chats": {
-                                role: "assistant",
-                                content: openai
-                            }
                         }
                     });
                 } catch (err) {
