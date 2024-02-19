@@ -44,6 +44,36 @@ const CheckLogged = async (req, res, next) => {
   });
 };
 
+
+
+
+router.post("/update", CheckLogged, async (req, res) => {
+  const { email, firstName, lastName, image } = req.body;
+  console.log(req)
+  done = await db.collection(collections.USER).updateOne({email}, {
+    $set: {
+        fName: firstName,
+        lName: lastName
+    }
+  })
+  console.log(done)
+
+  user.updateUserProfile(email, firstName, lastName, image)
+    .then(result => {
+      if (result.success) {
+        res.status(200).json({ success: true, message: "User profile updated successfully" });
+      } else {
+        res.status(500).json({ success: false, error: result.error || "Internal server error" });
+      }
+    })
+    .catch(error => {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ success: false, error: "Error updating user profile" });
+    });
+});
+
+
+
 router.get("/checkLogged", CheckLogged, (req, res) => {
   res.status(405).json({
     status: 405,
@@ -84,13 +114,13 @@ router.post("/signup", CheckLogged, async (req, res) => {
               html = html.replace("[TITLE]", "Verify your email address");
               html = html.replace(
                 "[CONTENT]",
-                "To continue setting up your OpenAI account, please verify that this is your email address."
+                "To continue setting up your Grant CoPilot account, please verify that this is your email address."
               );
               html = html.replace("[BTN_NAME]", "Verify email address");
 
               sendMail({
                 to: req.body.email,
-                subject: `OpenAI - Verify your email`,
+                subject: `Grant CoPilot - Verify your email`,
                 html,
               });
             } else {
@@ -351,7 +381,7 @@ router.post("/forgot-request", CheckLogged, async (req, res) => {
 
               sendMail({
                 to: req.body.email,
-                subject: `Change password for OpenAI`,
+                subject: `Change password for Grant CoPilot`,
                 html,
               });
             } else {
@@ -594,7 +624,7 @@ router.post("/send_otp", async (req, res) => {
 
       // Define email options
       const mailOptions = {
-        from:`OpenAI <${process.env.MAIL_EMAIL}>`, // Sender email address
+        from:`Grant CoPilot <${process.env.MAIL_EMAIL}>`, // Sender email address
         to: req.body.email, // Recipient email address
         subject: 'Your OTP', // Email subject
         text: `Your OTP is: ${otp}`, // Email body
