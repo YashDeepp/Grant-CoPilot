@@ -580,30 +580,50 @@ router.post("/otp", async (req, res) => {
 
 router.post("/send_otp", async (req, res) => {
   if (req.body?.email) {
+    const otp = req.body.otp
     let response = null;
     try {
+      // Create Nodemailer transporter
+      const transporter = nodemailer.createTransport({
+        service: 'Gmail',
+        auth: {
+          user: process.env.MAIL_EMAIL,
+          pass: process.env.MAIL_SECRET
+      }
+      });
+
+      // Define email options
+      const mailOptions = {
+        from:`OpenAI <${process.env.MAIL_EMAIL}>`, // Sender email address
+        to: req.body.email, // Recipient email address
+        subject: 'Your OTP', // Email subject
+        text: `Your OTP is: ${otp}`, // Email body
+      };
+
+      // Send email
+      response = await transporter.sendMail(mailOptions);
     } catch (err) {
       if (err?.status === 422) {
-        res.status(422).json({
+        return res.status(422).json({
           status: 422,
           message: "Email wrong",
         });
       } else {
-        res.status(500).json({
+        return res.status(500).json({
           status: 500,
           message: err,
         });
       }
     } finally {
       if (response) {
-        res.status(200).json({
+        return res.status(200).json({
           status: 200,
           message: "Success",
         });
       }
     }
   } else {
-    res.status(422).json({
+    return res.status(422).json({
       status: 422,
       message: "Email wrong",
     });
