@@ -21,7 +21,7 @@ import "./style.scss";
 
 const Menu = ({ changeColorMode }) => {
   let path = window.location.pathname;
-
+  const user = useSelector((state) => state.user);
   const menuRef = useRef(null);
   const btnRef = useRef(null);
   const settingRef = useRef(null);
@@ -32,21 +32,8 @@ const Menu = ({ changeColorMode }) => {
   const { history } = useSelector((state) => state);
   const [confirm, setConfim] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
-  const [profileName, setProfileName] = useState("Anonymous User");
-
-  const updateUser = async () => {
-    let res = null;
-    try {
-      res = await instance.get("update user route url");
-    } catch (err) {
-      console.log(err);
-    } finally {
-      if (res?.data?.status === 200) {
-        setProfileName(res?.data?.data?.name);
-        setProfilePicture(res?.data?.data?.profilePicture);
-      }
-    }
-  };
+  const [firstName, setFirstName] = useState("Anonymous ");
+  const [lastName, setlastName] = useState("User");
 
   const logOut = async () => {
     if (window.confirm("Do you want log out")) {
@@ -150,7 +137,6 @@ const Menu = ({ changeColorMode }) => {
       <Modal
         changeColorMode={changeColorMode}
         settingRef={settingRef}
-        updateUser={updateUser}
       />
 
       <header>
@@ -273,8 +259,8 @@ const Menu = ({ changeColorMode }) => {
             Log out
           </button>
           <button>
-            <Profile profilePicture={profilePicture} />
-            {profileName}
+            <Profile profilePicture={user.profilePicture} />
+            {user?.fName + " " + user.lName}
           </button>
         </div>
       </div>
@@ -290,9 +276,66 @@ const Menu = ({ changeColorMode }) => {
 
 export default Menu;
 
-const Modal = ({ changeColorMode, settingRef, updateUser }) => {
+const Modal = ({ changeColorMode, settingRef }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const user = useSelector((state) => state.user);
+
+
+  const updateUser = async () => {
+    // Gather input values
+    const firstName = document.getElementById('first-name').value;
+    const lastName = document.getElementById('last-name').value;
+    const profilePicture = fileInputRef.current.files[0]; // Get the selected file
+  
+    try {
+      // Read file as buffer
+      const buffer = await readFileAsBuffer(profilePicture);
+      console.log(buffer)
+      // Create FormData to send data
+      const formData = new FormData();
+      formData.append('email', user?.email);
+      formData.append('firstName', firstName);
+      formData.append('lastName', lastName);
+      formData.append('profilePicture', buffer);
+      console.log(formData.get('profilePicture'));
+      // Make request to update user with FormData
+      const response = await instance.post('/api/user/update', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', // Set content type to  multipart/form-data
+        },
+      });
+  
+      // Handle response here
+      console.log('Update successful:', response.data);
+    } catch (err) {
+      console.error('Error updating user:', err);
+      if (err?.response?.status === 405) {
+        alert('Not Logged');
+        dispatch(emptyUser());
+        navigate('/login');
+      } else {
+        alert('An error occurred while updating user');
+      }
+    }
+  };
+  
+  // Function to read file and convert it to a buffer
+  const readFileAsBuffer = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const buffer = event.target.result;
+        resolve(buffer);
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      reader.readAsArrayBuffer(file); // Read the file as an array buffer
+    });
+  };
+  
 
   const deleteAccount = async () => {
     if (window.confirm("Do you want delete your account")) {
@@ -343,12 +386,14 @@ const Modal = ({ changeColorMode, settingRef, updateUser }) => {
         </div>
         <div className="content ceneter">
           <div className="content-input">
-            <label htmlFor="name">Name</label>
-            <input type="text" id="name" className="" />
+            <label htmlFor="name">First Name</label>
+            <input type="text" id="first-name" className="" />
+            <label htmlFor="name">Last Name</label>
+            <input type="text" id="last-name" className="" />
           </div>
           <div className="content-input">
             <label htmlFor="profile-picture">Profile Picture</label>
-            <input type="file" id="profile-picture" />
+            <input type="file" id="profile-picture" ref={fileInputRef} />
           </div>
           <div className="content-submit">
             <div>
@@ -375,7 +420,6 @@ const Modal = ({ changeColorMode, settingRef, updateUser }) => {
           </div>
         </div>
         <div className="bottum">
-          <button>Export data</button>
           <button className="end" onClick={deleteAccount}>
             Delete account
           </button>
