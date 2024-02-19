@@ -119,7 +119,6 @@ router.post('/', CheckUser, async (req, res) => {
 
 router.put('/', CheckUser, async (req, res) => {
     const { prompt, userId, chatId } = req.body
-    console.log(prompt,userId,chatId)
     let mes= {
         "role": "system",
         "content": "You are a very interactive and helpful assistant ",
@@ -134,8 +133,6 @@ router.put('/', CheckUser, async (req, res) => {
     }]
     let response = {}
     try { 
-        console.log("first")
-        console.log("PUT is called")
         response.openai = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages:mes,
@@ -145,15 +142,12 @@ router.put('/', CheckUser, async (req, res) => {
         for await (const part of response.openai){
             let text = part.choices[0].delta.content ?? ""
             full+=text
-            // console.clear();
-            console.log(full);
         }
         response.openai={
             role:"assistant",
             content:full
         };
        //response.openai = response.openai.choices[0].message;
-       console.log(response.openai)
         if (response.openai) {
             response.openai =response.openai.content
             let index = 0
@@ -168,7 +162,6 @@ router.put('/', CheckUser, async (req, res) => {
                 }
                 index++
             }
-            console.log(index)
             response.db = await chat.Response(prompt, response, userId, chatId)
         }
     } catch (err) {
@@ -178,7 +171,6 @@ router.put('/', CheckUser, async (req, res) => {
         })
     } finally {
         if (response?.db && response?.openai) {
-            console.log(response)
             res.status(200).json({
                 status: 200,
                 message: 'Success',
@@ -236,7 +228,6 @@ router.get('/history', CheckUser, async (req, res) => {
         })
     } finally {
         if (response) {
-            console.log(response)
             res.status(200).json({
                 status: 200,
                 message: "Success",
