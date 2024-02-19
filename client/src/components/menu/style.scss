@@ -359,9 +359,9 @@ header {
         margin-right: 1rem;
         cursor: pointer;
 
-        &:is(.end) {
-          padding-left: 1rem;
-        }
+        // &:is(.end) {
+        //   padding-left: 1rem;
+        // }
       }
     }
   }
@@ -404,9 +404,9 @@ header {
         color: rgba(86, 88, 105, 1);
         text-decoration: underline;
 
-        &:is(.end) {
-          border-left: 1px solid rgba(86, 88, 105, 1);
-        }
+        // &:is(.end) {
+        //   border-left: 1px solid rgba(86, 88, 105, 1);
+        // }
       }
     }
   }
@@ -449,9 +449,9 @@ header {
         color: rgba(197, 197, 210, 1);
         text-decoration: underline;
 
-        &:is(.end) {
-          border-left: 1px solid rgba(197, 197, 210, 1);
-        }
+        // &:is(.end) {
+        //   border-left: 1px solid rgba(197, 197, 210, 1);
+        // }
       }
     }
   }

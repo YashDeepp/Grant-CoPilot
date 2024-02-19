@@ -6,7 +6,8 @@ import { setLoading } from "../redux/loading";
 import { useDispatch, useSelector } from "react-redux";
 import { addList, emptyAllRes, insertNew, livePrompt } from "../redux/messages";
 import { emptyUser } from "../redux/user";
-import instance from "../config/instance";  
+import instance from "../config/instance";
+import Upload from "./../assets/upload"
 import "./style.scss";
 
 const reducer = (state, { type, status }) => {
@@ -127,25 +128,27 @@ const InputArea = ({ status, chatRef, stateAction }) => {
     });
   });
 
-  const FormHandle = async () => {
+  const FormHandle = async () => {  
     if (prompt?.length > 0) {
-      stateAction({ type: "chat", status: true });
-
-      let chatsId = Date.now();
-
-      dispatch(insertNew({ id: chatsId, content: "", prompt }));
       chatRef?.current?.clearResponse();
-
+      stateAction({ type: "chat", status: true });
+  
+      let chatsId = Date.now();
+  
+      dispatch(insertNew({ id: chatsId, content: "", prompt }));
+  
       let res = null;
-
+  
       try {
         if (_id) {
-          console.log(prompt, content, _id)
+          console.log(prompt, content, _id);
+          dispatch(livePrompt(""));
           res = await instance.put("/api/chat", {
             chatId: _id,
             prompt,
           });
         } else {
+          dispatch(livePrompt(""));
           res = await instance.post("/api/chat", {
             prompt,
           });
@@ -162,25 +165,23 @@ const InputArea = ({ status, chatRef, stateAction }) => {
       } finally {
         if (res?.data) {
           const { _id, content } = res?.data?.data;
-
+  
           dispatch(insertNew({ _id, fullContent: content, chatsId }));
-
+  
           chatRef?.current?.loadResponse(stateAction, content, chatsId);
-
+  
           stateAction({ type: "error", status: false });
-          dispatch(livePrompt(""));
         }
       }
     }
   };
+  
 
   useEffect(() => {
     const handleInput = (e) => {
       if (e.key === "Enter" && e.shiftKey) {
         e.preventDefault();
-
         FormHandle(textAreaRef.current.value.trim());
-
         textAreaRef.current.value = "";
       }
     };
@@ -221,6 +222,17 @@ const InputArea = ({ status, chatRef, stateAction }) => {
           </div>
 
           <div className="flexBody">
+            <div className="upload-file">
+              <label htmlFor="fileInput">
+                <input
+                  type="file"
+                  id="fileInput"
+                  accept=".png, .jpg, .pdf"
+                  style={{ display: "none", cursor: "pointer" }}
+                />
+                <Upload />
+              </label>
+            </div>
             <div className="box">
               <textarea
                 ref={textAreaRef}
@@ -230,7 +242,11 @@ const InputArea = ({ status, chatRef, stateAction }) => {
                 }}
               />
               {!status?.loading ? (
-                <button onClick={FormHandle}>{<Rocket />}</button>
+                <button onClick={() => {
+                  console.log(textAreaRef.current.value)
+                  textAreaRef.current.value = "";
+                  FormHandle()
+                }}>{<Rocket />}</button>
               ) : (
                 <div className="loading">
                   <div className="dot" />
