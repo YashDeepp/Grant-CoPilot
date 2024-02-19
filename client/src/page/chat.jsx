@@ -222,7 +222,7 @@ const InputArea = ({ status, chatRef, stateAction }) => {
           </div>
 
           <div className="flexBody">
-            <div className="upload-file">
+            {/* <div className="upload-file">
               <label htmlFor="fileInput">
                 <input
                   type="file"
@@ -232,7 +232,7 @@ const InputArea = ({ status, chatRef, stateAction }) => {
                 />
                 <Upload />
               </label>
-            </div>
+            </div> */}
             <div className="box">
               <textarea
                 ref={textAreaRef}

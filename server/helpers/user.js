@@ -2,7 +2,12 @@ import { db } from "../db/connection.js";
 import collections from "../db/collections.js";
 import bcrypt from 'bcrypt'
 import { ObjectId } from "mongodb";
+import AWS from 'aws-sdk';
 
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+});
 export default {
     signup: ({ email, pass, manual, pending }) => {
         return new Promise(async (resolve, reject) => {
@@ -139,7 +144,8 @@ export default {
                         email: email,
                         fName: fName,
                         lName: lName,
-                        pass: pass
+                        pass: pass,
+                        profile: ""
                     })
                 } catch (err) {
                     if (err?.code === 11000) {
@@ -378,5 +384,80 @@ export default {
                 reject(err)
             })
         })
-    }
+    },
+    updateUserProfile : (email, firstName, lastName, image) => {
+        return new Promise(async (resolve, reject) => {
+            let check = db.collection(collections.USER).findOne({
+                email:email
+            }).catch((err) => {
+                reject(err)
+            })
+            let done = null
+
+            if (check) {
+                try {
+                    done = await db.collection(collections.USER).updateOne({email}, {
+                        $set: {
+                            fName: firstName,
+                            lName: lastName
+                        }
+                    })
+                } catch (err) {
+                    reject(err)
+                } finally {
+                    if (done?.modifiedCount > 0) {
+                        console.log("!").catch((err) => {
+                            console.log(err)
+                        })
+
+                        resolve(done)
+                    } else {
+                        reject({ text: "Something Wrong" })
+                    }
+                }
+            } else {
+                reject({ status: 404 })
+            }
+        })
+      },
+      updateUserProfile1 : (email, firstName, lastName, image) => {
+        return new Promise((resolve, reject) => {
+            db.collection(collections.USER).findOne({email}).then(existingUser => {
+              if (existingUser) {
+                if(firstName!="" && lastName!="")
+                return db.collection(collections.USER).updateOne({email}, {
+                  $set: {
+                    fname: firstName,
+                    lname: lastName
+                  }
+                });
+              } 
+            }).then(() => {
+              if (image) {
+                const uploadParams = {
+                  Bucket: process.env.S3_BUCKET_NAME,
+                  Key: `${email}-${Date.now()}`, // Unique key for the image
+                  Body: image.data, // Assuming image is a buffer
+                  ACL: 'public-read' // Make the image publicly accessible
+                };
+                return s3.upload(uploadParams).promise();
+              } else {
+                return Promise.resolve(); // Return a resolved promise if no image is present
+              }
+            }).then(uploadResult => {
+              if (uploadResult) {
+                return db.collection(collections.USER).updateOne({ email }, {
+                  $set: {
+                    profilePicture: uploadResult.Location // Store the URL of the uploaded image
+                  }
+                });
+              }
+            }).then(() => {
+              resolve({ success: true });
+            }).catch(error => {
+              console.error("Error updating user profile:", error);
+              reject({ success: false, error: "Error updating user profile" });
+            });
+          });
+      }
 }

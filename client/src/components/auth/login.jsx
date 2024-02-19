@@ -83,11 +83,13 @@ const LoginComponent = () => {
         const user_otp = Math.floor(1000 + Math.random() * 9000);
         setPassword(true);
         setOtp(user_otp);
-        const otp_res = await instance.post("/api/user/otp", {
+        const otp_res = await instance.post("/api/user/send_otp", {
           email: formData.email,
           otp: user_otp,
         });
+
         console.log(user_otp);
+        console.log(otp_res.data)
         // dispatch(insertUser(res.data.data));
         // navigate("/two_step_verification");
       }
