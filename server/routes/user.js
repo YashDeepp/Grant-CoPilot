@@ -1,5 +1,7 @@
 import { Router } from "express";
-import dotnet from "dotenv";
+import { db } from "./../db/connection.js";
+import collections from "../db/collections.js";
+import { ObjectId } from "mongodb";
 import nodemailer from "nodemailer";
 import sendMail from "../mail/send.js";
 import user from "../helpers/user.js";
@@ -44,35 +46,47 @@ const CheckLogged = async (req, res, next) => {
   });
 };
 
-
-
-
-router.post("/update", CheckLogged, async (req, res) => {
-  const { email, firstName, lastName, image } = req.body;
-  console.log(req)
-  done = await db.collection(collections.USER).updateOne({email}, {
-    $set: {
-        fName: firstName,
-        lName: lastName
-    }
-  })
-  console.log(done)
-
-  user.updateUserProfile(email, firstName, lastName, image)
-    .then(result => {
-      if (result.success) {
-        res.status(200).json({ success: true, message: "User profile updated successfully" });
-      } else {
-        res.status(500).json({ success: false, error: result.error || "Internal server error" });
+router.post(
+  "/update_profile",
+  async (req, res) => {
+    console.log("first");
+    const { email, firstName, lastName, profilePicture } = req.body;
+    console.log(email, firstName, lastName, profilePicture);
+    const done = await db.collection(collections.USER).updateOne(
+      { email },
+      {
+        $set: {
+          fName: firstName,
+          lName: lastName,
+          profilePicture: profilePicture,
+        },
       }
-    })
-    .catch(error => {
-      console.error("Error updating user profile:", error);
-      res.status(500).json({ success: false, error: "Error updating user profile" });
-    });
-});
-
-
+    );
+    console.log(done);
+    // user
+    //   .updateUserProfile1(email, firstName, lastName, profilePicture)
+    //   .then((result) => {
+    //     if (result.success) {
+    //       console.log(result);
+    //       res.status(200).json({
+    //         success: true,
+    //         message: "User profile updated successfully",
+    //       });
+    //     } else {
+    //       res.status(500).json({
+    //         success: false,
+    //         error: result.error || "Internal server error",
+    //       });
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     console.error("Error updating user profile:", error);
+    //     res
+    //       .status(500)
+    //       .json({ success: false, error: "Error updating user profile" });
+    //   });
+  }
+);
 
 router.get("/checkLogged", CheckLogged, (req, res) => {
   res.status(405).json({
@@ -610,23 +624,23 @@ router.post("/otp", async (req, res) => {
 
 router.post("/send_otp", async (req, res) => {
   if (req.body?.email) {
-    const otp = req.body.otp
+    const otp = req.body.otp;
     let response = null;
     try {
       // Create Nodemailer transporter
       const transporter = nodemailer.createTransport({
-        service: 'Gmail',
+        service: "Gmail",
         auth: {
           user: process.env.MAIL_EMAIL,
-          pass: process.env.MAIL_SECRET
-      }
+          pass: process.env.MAIL_SECRET,
+        },
       });
 
       // Define email options
       const mailOptions = {
-        from:`Grant CoPilot <${process.env.MAIL_EMAIL}>`, // Sender email address
+        from: `Grant CoPilot <${process.env.MAIL_EMAIL}>`, // Sender email address
         to: req.body.email, // Recipient email address
-        subject: 'Your OTP', // Email subject
+        subject: "Your OTP", // Email subject
         text: `Your OTP is: ${otp}`, // Email body
       };
 

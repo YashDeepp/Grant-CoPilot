@@ -16,8 +16,19 @@ import { emptyUser } from "../../redux/user";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { activePage, addHistory } from "../../redux/history";
+import ReactS3 from "react-s3";
 import instance from "../../config/instance";
 import "./style.scss";
+import { Buffer } from "buffer";
+window.Buffer = Buffer;
+
+
+const config = {
+    bucketName: S3_BUCKET,
+    region: REGION,
+    accessKeyId: ACCESS_KEY,
+    secretAccessKey: SECRET_ACCESS_KEY,
+}
 
 const Menu = ({ changeColorMode }) => {
   let path = window.location.pathname;
@@ -287,28 +298,29 @@ const Modal = ({ changeColorMode, settingRef }) => {
     // Gather input values
     const firstName = document.getElementById('first-name').value;
     const lastName = document.getElementById('last-name').value;
-    const profilePicture = fileInputRef.current.files[0]; // Get the selected file
-  
+    let profilePicture = fileInputRef.current.files[0]; // Get the selected file
+    console.log(profilePicture)
     try {
-      // Read file as buffer
-      const buffer = await readFileAsBuffer(profilePicture);
-      console.log(buffer)
+      const data = await ReactS3.uploadFile(profilePicture, config)
+      profilePicture = data.location
+      console.log("first name")
+      // console.log(data.location)
       // Create FormData to send data
       const formData = new FormData();
       formData.append('email', user?.email);
       formData.append('firstName', firstName);
       formData.append('lastName', lastName);
-      formData.append('profilePicture', buffer);
-      console.log(formData.get('profilePicture'));
+      formData.append('profilePicture', profilePicture);
       // Make request to update user with FormData
-      const response = await instance.post('/api/user/update', formData, {
+      const response = await instance.post('/api/user/update_profile', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data', // Set content type to  multipart/form-data
+          'Content-Type': 'application/json', // Set content type to  multipart/form-data
         },
       });
   
       // Handle response here
       console.log('Update successful:', response.data);
+      window.reload();
     } catch (err) {
       console.error('Error updating user:', err);
       if (err?.response?.status === 405) {
@@ -319,23 +331,7 @@ const Modal = ({ changeColorMode, settingRef }) => {
         alert('An error occurred while updating user');
       }
     }
-  };
-  
-  // Function to read file and convert it to a buffer
-  const readFileAsBuffer = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const buffer = event.target.result;
-        resolve(buffer);
-      };
-      reader.onerror = (error) => {
-        reject(error);
-      };
-      reader.readAsArrayBuffer(file); // Read the file as an array buffer
-    });
-  };
-  
+  };  
 
   const deleteAccount = async () => {
     if (window.confirm("Do you want delete your account")) {
