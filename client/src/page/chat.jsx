@@ -179,7 +179,7 @@ const InputArea = ({ status, chatRef, stateAction }) => {
 
   useEffect(() => {
     const handleInput = (e) => {
-      if (e.key === "Enter" && e.shiftKey) {
+      if (e.key === "Enter" && e.ctrlKey) {
         e.preventDefault();
         FormHandle(textAreaRef.current.value.trim());
         textAreaRef.current.value = "";

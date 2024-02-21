@@ -22,6 +22,10 @@ import "./style.scss";
 import { Buffer } from "buffer";
 window.Buffer = Buffer;
 
+const S3_BUCKET="grant-copilot"
+const REGION="us-east-1"
+const ACCESS_KEY="AKIAY7BEJYRC3YUJH3FO"
+const SECRET_ACCESS_KEY="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"
 
 const config = {
     bucketName: S3_BUCKET,
@@ -320,7 +324,6 @@ const Modal = ({ changeColorMode, settingRef }) => {
   
       // Handle response here
       console.log('Update successful:', response.data);
-      window.reload();
     } catch (err) {
       console.error('Error updating user:', err);
       if (err?.response?.status === 405) {
@@ -330,6 +333,8 @@ const Modal = ({ changeColorMode, settingRef }) => {
       } else {
         alert('An error occurred while updating user');
       }
+    } finally {
+      window.location.reload();
     }
   };  
 
@@ -410,7 +415,10 @@ const Modal = ({ changeColorMode, settingRef }) => {
               </button>
             </div>
 
-            <button className="content-button" onClick={updateUser}>
+            <button className="content-button" onClick={() => {
+              settingRef.current.style.display = "none";
+              updateUser();
+            }}>
               Update
             </button>
           </div>

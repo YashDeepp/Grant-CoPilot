@@ -46,47 +46,22 @@ const CheckLogged = async (req, res, next) => {
   });
 };
 
-router.post(
-  "/update_profile",
-  async (req, res) => {
-    console.log("first");
-    const { email, firstName, lastName, profilePicture } = req.body;
-    console.log(email, firstName, lastName, profilePicture);
-    const done = await db.collection(collections.USER).updateOne(
-      { email },
-      {
-        $set: {
-          fName: firstName,
-          lName: lastName,
-          profilePicture: profilePicture,
-        },
-      }
-    );
-    console.log(done);
-    // user
-    //   .updateUserProfile1(email, firstName, lastName, profilePicture)
-    //   .then((result) => {
-    //     if (result.success) {
-    //       console.log(result);
-    //       res.status(200).json({
-    //         success: true,
-    //         message: "User profile updated successfully",
-    //       });
-    //     } else {
-    //       res.status(500).json({
-    //         success: false,
-    //         error: result.error || "Internal server error",
-    //       });
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error updating user profile:", error);
-    //     res
-    //       .status(500)
-    //       .json({ success: false, error: "Error updating user profile" });
-    //   });
-  }
-);
+router.post("/update_profile", async (req, res) => {
+  console.log("first");
+  const { email, firstName, lastName, profilePicture } = req.body;
+  console.log(email, firstName, lastName, profilePicture);
+  const done = await db.collection(collections.USER).updateOne(
+    { email },
+    {
+      $set: {
+        fName: firstName,
+        lName: lastName,
+        profilePicture: profilePicture,
+      },
+    }
+  );
+  console.log(done);
+});
 
 router.get("/checkLogged", CheckLogged, (req, res) => {
   res.status(405).json({
@@ -297,28 +272,11 @@ router.get("/login", CheckLogged, async (req, res) => {
       }
     } finally {
       if (response) {
-        let token = jwt.sign(
-          {
-            _id: response._id,
-            email: response.email,
-          },
-          process.env.JWT_PRIVATE_KEY,
-          {
-            expiresIn: "24h",
-          }
-        );
-
-        res
-          .status(200)
-          .cookie("userToken", token, {
-            httpOnly: true,
-            expires: new Date(Date.now() + 86400000),
-          })
-          .json({
-            status: 200,
-            message: "Success",
-            data: response,
-          });
+        res.status(200).json({
+          status: 200,
+          message: "Success",
+          data: response,
+        });
       }
     }
   };
@@ -660,6 +618,12 @@ router.post("/send_otp", async (req, res) => {
       }
     } finally {
       if (response) {
+        await db.collection(collections.TEMP).updateOne(
+          { email: req.body.email }, // Search criteria
+          { $set: { otp: req.body.otp } }, // Update or create object with otp
+          { upsert: true } // Option to insert if not found
+        );
+        
         return res.status(200).json({
           status: 200,
           message: "Success",
@@ -671,6 +635,68 @@ router.post("/send_otp", async (req, res) => {
       status: 422,
       message: "Email wrong",
     });
+  }
+});
+
+router.post("/verify_otp", async (req, res) => {
+  console.log(req.body?.email, req.body?.otp);
+  if (req.body?.email && req.body?.otp) {
+    let response = null;
+    try {
+      response = await db.collection(collections.TEMP).findOne({
+        email: req.body.email,
+      });
+      console.log(response);
+    } catch (err) {
+      if (err?.status === 422) {
+        return res.status(422).json({
+          status: 422,
+          message: "Email wrong",
+        });
+      } else {
+        return res.status(500).json({
+          status: 500,
+          message: err,
+        });
+      }
+    } finally {
+      console.log(response.otp, req.body.otp)
+      if (response.otp == req.body.otp) {
+        const user = await db.collection(collections.USER).findOne({
+          email: req.body.email,
+        });
+        await db.collection(collections.TEMP).deleteOne({
+          email: req.body.email,
+        });
+        let token = jwt.sign(
+          {
+            _id: user._id,
+            email: user.email,
+          },
+          process.env.JWT_PRIVATE_KEY,
+          {
+            expiresIn: "24h",
+          }
+        );
+
+        res
+          .status(200)
+          .cookie("userToken", token, {
+            httpOnly: true,
+            expires: new Date(Date.now() + 86400000),
+          })
+          .json({
+            status: 200,
+            message: "Success",
+            data: user,
+          });
+      } else {
+        return res.status(422).json({
+          status: 422,
+          message: "OTP wrong",
+        });
+      }
+    }
   }
 });
 
