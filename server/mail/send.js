@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
 
 export default ({ to, subject, html }) => {
     var options = {
-        from: `OpenAI <${process.env.MAIL_EMAIL}>`,
+        from: `GE CoPilot™ <${process.env.MAIL_EMAIL}>`,
         to,
         subject,
         html

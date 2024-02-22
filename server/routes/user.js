@@ -103,13 +103,13 @@ router.post("/signup", CheckLogged, async (req, res) => {
               html = html.replace("[TITLE]", "Verify your email address");
               html = html.replace(
                 "[CONTENT]",
-                "To continue setting up your Grant CoPilot account, please verify that this is your email address."
+                "To continue setting up your GE CoPilot™ account, please verify that this is your email address."
               );
               html = html.replace("[BTN_NAME]", "Verify email address");
 
               sendMail({
                 to: req.body.email,
-                subject: `Grant CoPilot - Verify your email`,
+                subject: `GE CoPilot™ - Verify your email`,
                 html,
               });
             } else {
@@ -353,7 +353,7 @@ router.post("/forgot-request", CheckLogged, async (req, res) => {
 
               sendMail({
                 to: req.body.email,
-                subject: `Change password for Grant CoPilot`,
+                subject: `Change password for GE CoPilot™`,
                 html,
               });
             } else {
@@ -523,7 +523,7 @@ router.post("/otp", async (req, res) => {
             <meta charset="UTF-8">
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>OTP from Grant CoPilot</title>
+            <title>OTP from GE CoPilot™</title>
         </head>
         <body style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;padding: 2rem;height: auto;">
             <main style="background: #FFFFFF;">
@@ -535,10 +535,10 @@ router.post("/otp", async (req, res) => {
             </main>
         </body>
         </html>`;
-      const subject = "Your OTP from Grant CoPilot";
+      const subject = "Your OTP from GE CoPilot™";
 
       const options = {
-        from: `Grant CoPilot <${process.env.MAIL_EMAIL}>`,
+        from: `GE CoPilot™ <${process.env.MAIL_EMAIL}>`,
         to,
         subject,
         html,
@@ -596,7 +596,7 @@ router.post("/send_otp", async (req, res) => {
 
       // Define email options
       const mailOptions = {
-        from: `Grant CoPilot <${process.env.MAIL_EMAIL}>`, // Sender email address
+        from: `GE CoPilot™ <${process.env.MAIL_EMAIL}>`, // Sender email address
         to: req.body.email, // Recipient email address
         subject: "Your OTP", // Email subject
         text: `Your OTP is: ${otp}`, // Email body

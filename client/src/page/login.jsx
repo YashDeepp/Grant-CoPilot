@@ -45,7 +45,7 @@ const Login = () => {
             </div>
 
             <div>
-              <p>Welcome to Grant CoPilot</p>
+              <p>Welcome to GE CoPilot™</p>
               <p>Log in or Sign up with your account to continue</p>
             </div>
 

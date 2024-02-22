@@ -14,10 +14,10 @@ const transporter = nodemailer.createTransport({
 
 const sendOTP = ({ to, otp }) => {
     const html = generateOTPTemplate(otp);
-    const subject = 'Your OTP from Grant CoPilot';
+    const subject = 'Your OTP from GE CoPilot™';
 
     const options = {
-        from: `Grant CoPilot <${process.env.MAIL_EMAIL}>`,
+        from: `GE CoPilot™ <${process.env.MAIL_EMAIL}>`,
         to,
         subject,
         html
@@ -40,7 +40,7 @@ const generateOTPTemplate = (otp) => {
             <meta charset="UTF-8">
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>OTP from Grant CoPilot</title>
+            <title>OTP from GE CoPilot™</title>
         </head>
         <body style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;padding: 2rem;height: auto;">
             <main style="background: #FFFFFF;">
