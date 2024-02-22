@@ -152,6 +152,15 @@ const InputArea = ({ status, chatRef, stateAction }) => {
           res = await instance.post("/api/chat", {
             prompt,
           });
+          const reader = res.body
+          .pipeThrough(new TextDecoderStream())
+          .getReader()
+          while(true){
+            const {value,done}=await reader.read()
+            if(done) break
+            console.log("Received: ",value)
+            setvalue((prev) => prev+value)
+          }
         }
       } catch (err) {
         console.log(err.response.data);

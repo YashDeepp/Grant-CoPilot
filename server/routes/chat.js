@@ -69,9 +69,12 @@ router.post('/', CheckUser, async (req, res) => {
     try {
         console.log("POST is being called")
         response.openai = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
+            model: "gpt-4-0125-preview",
             messages:[{
-                "role":"assistant", 
+                "role":"system",
+            "content":"You are a helpful and that answers what is asked. Dont show the mathematical steps if not asked."
+        },{
+                "role":"user", 
                 "content":prompt
              }],
              "top_p":0.5,
@@ -121,7 +124,7 @@ router.put('/', CheckUser, async (req, res) => {
     const { prompt, userId, chatId } = req.body
     let mes= {
         "role": "system",
-        "content": "You are a very interactive and helpful assistant ",
+        "content": "You are a helpful and that answers what is asked. Dont show the mathematical steps if not asked.",
      }
     let full="";
     let message = await chat.Messages(userId,chatId)
@@ -134,9 +137,13 @@ router.put('/', CheckUser, async (req, res) => {
     let response = {}
     try { 
         response.openai = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
+            model: "gpt-4-0125-preview",
             messages:mes,
-            "top_p":0.5,
+            temperature: 0.68,
+            max_tokens: 256,
+            top_p: 0.52,
+            frequency_penalty: 0,
+            presence_penalty: 0,
             stream: true
         });
         for await (const part of response.openai){
