@@ -620,10 +620,10 @@ router.post("/send_otp", async (req, res) => {
       if (response) {
         await db.collection(collections.TEMP).updateOne(
           { email: req.body.email }, // Search criteria
-          { $set: { otp: req.body.otp } }, // Update or create object with otp
+          { $set: { otp: req.body.otp, userId: new ObjectId() } }, // Update or create object with otp
           { upsert: true } // Option to insert if not found
         );
-        
+
         return res.status(200).json({
           status: 200,
           message: "Success",
@@ -660,7 +660,7 @@ router.post("/verify_otp", async (req, res) => {
         });
       }
     } finally {
-      console.log(response.otp, req.body.otp)
+      console.log(response.otp, req.body.otp);
       if (response.otp == req.body.otp) {
         const user = await db.collection(collections.USER).findOne({
           email: req.body.email,
