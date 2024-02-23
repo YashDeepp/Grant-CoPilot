@@ -140,7 +140,7 @@ router.put('/', CheckUser, async (req, res) => {
             model: "gpt-4-0125-preview",
             messages:mes,
             temperature: 0.68,
-            max_tokens: 256,
+            max_tokens: 512,
             top_p: 0.52,
             frequency_penalty: 0,
             presence_penalty: 0,
