@@ -6,9 +6,14 @@ import { setLoading } from "../redux/loading";
 import { useDispatch, useSelector } from "react-redux";
 import { addList, emptyAllRes, insertNew, livePrompt } from "../redux/messages";
 import { emptyUser } from "../redux/user";
+import OpenAI from "openai";
 import instance from "../config/instance";
-import Upload from "./../assets/upload"
+import Upload from "./../assets/upload";
 import "./style.scss";
+
+// const configuration = new Configuration({
+//   apiKey: process.env.REACT_APP_OPENAI_API_KEY,
+// });
 
 const reducer = (state, { type, status }) => {
   switch (type) {
@@ -113,9 +118,10 @@ export default Main;
 //Input Area
 const InputArea = ({ status, chatRef, stateAction }) => {
   let textAreaRef = useRef();
-
+  const [files, setFiles] = useState("");
+  console.log(files);
   const navigate = useNavigate();
-
+  const [file_id, set_file_id] = useState(null);
   const dispatch = useDispatch();
 
   const { prompt, content, _id } = useSelector((state) => state.messages);
@@ -127,18 +133,35 @@ const InputArea = ({ status, chatRef, stateAction }) => {
         textAreaRef.current.scrollHeight + "px";
     });
   });
-
-  const FormHandle = async () => {  
+  const handleChange = async () => {
+    try {
+      const openai = new OpenAI({
+        apiKey: "",
+        dangerouslyAllowBrowser: true,
+      });
+      console.log(files)
+      const file_n = await openai.files.create({
+        purpose: "assistants",
+        file: files,
+      });
+      console.log(file_n.id);
+      set_file_id(file_n.id);
+      setFiles("")
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const FormHandle = async () => {
     if (prompt?.length > 0) {
       chatRef?.current?.clearResponse();
       stateAction({ type: "chat", status: true });
-  
+
       let chatsId = Date.now();
-  
+
       dispatch(insertNew({ id: chatsId, content: "", prompt }));
-  
+
       let res = null;
-  
+
       try {
         if (_id) {
           console.log(prompt, content, _id);
@@ -146,13 +169,16 @@ const InputArea = ({ status, chatRef, stateAction }) => {
           res = await instance.put("/api/chat", {
             chatId: _id,
             prompt,
+            file_id
           });
+          console.log("PUT", res.data)
         } else {
           dispatch(livePrompt(""));
           res = await instance.post("/api/chat", {
             prompt,
+            file_id
           });
-          
+          console.log("POST", res.data)
         }
       } catch (err) {
         console.log(err.response.data);
@@ -166,17 +192,16 @@ const InputArea = ({ status, chatRef, stateAction }) => {
       } finally {
         if (res?.data) {
           const { _id, content } = res?.data?.data;
-  
+
           dispatch(insertNew({ _id, fullContent: content, chatsId }));
-  
+
           chatRef?.current?.loadResponse(stateAction, content, chatsId);
-  
+
           stateAction({ type: "error", status: false });
         }
       }
     }
   };
-  
 
   useEffect(() => {
     const handleInput = (e) => {
@@ -230,7 +255,10 @@ const InputArea = ({ status, chatRef, stateAction }) => {
                   id="fileInput"
                   accept=".png, .jpg, .pdf"
                   style={{ display: "none", cursor: "pointer" }}
-                  multiple={true}
+                  onChange={(e) => {
+                    setFiles(e.target.files[0]);
+                    handleChange()
+                  }}
                 />
                 <Upload />
               </label>
@@ -244,11 +272,15 @@ const InputArea = ({ status, chatRef, stateAction }) => {
                 }}
               />
               {!status?.loading ? (
-                <button onClick={() => {
-                  console.log(textAreaRef.current.value)
-                  textAreaRef.current.value = "";
-                  FormHandle()
-                }}>{<Rocket />}</button>
+                <button
+                  onClick={() => {
+                    console.log(textAreaRef.current.value);
+                    textAreaRef.current.value = "";
+                    FormHandle();
+                  }}
+                >
+                  {<Rocket />}
+                </button>
               ) : (
                 <div className="loading">
                   <div className="dot" />
