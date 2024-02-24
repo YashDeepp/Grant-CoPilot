@@ -63,6 +63,7 @@ const Main = () => {
     actionBtns: false,
   });
 
+
   useEffect(() => {
     if (user) {
       dispatch(emptyAllRes());
@@ -125,7 +126,12 @@ const InputArea = ({ status, chatRef, stateAction }) => {
   const dispatch = useDispatch();
 
   const { prompt, content, _id } = useSelector((state) => state.messages);
-
+  
+  useEffect(() => {
+    if (files) {
+      handleChange();
+    }
+  });
   useEffect(() => {
     textAreaRef.current?.addEventListener("input", (e) => {
       textAreaRef.current.style.height = "auto";
@@ -136,7 +142,7 @@ const InputArea = ({ status, chatRef, stateAction }) => {
   const handleChange = async () => {
     try {
       const openai = new OpenAI({
-        apiKey: "",
+        apiKey: "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",
         dangerouslyAllowBrowser: true,
       });
       console.log(files)
@@ -255,10 +261,7 @@ const InputArea = ({ status, chatRef, stateAction }) => {
                   id="fileInput"
                   accept=".png, .jpg, .pdf"
                   style={{ display: "none", cursor: "pointer" }}
-                  onChange={(e) => {
-                    setFiles(e.target.files[0]);
-                    handleChange()
-                  }}
+                  onChange={(e) => setFiles(e.target.files[0])}
                 />
                 <Upload />
               </label>
